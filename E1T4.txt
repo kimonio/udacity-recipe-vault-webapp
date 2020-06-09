@@ -1,0 +1,19 @@
+Exercise 1 / Task 4: Identify Bad Practices
+
+1. The EC2 instance the webserver is on currently has a public IP address assigned as well as a security group configured that allows all traffic inbound.
+
+This should be addressed by changing the security group to only allow traffic inbound that is sourced from the load balancer, by referencing the security group assigned to the load balancer. This can be further locked down, by being very specific on which ports should be opened.
+
+Secondly, the instance does not need a public ip address assigned. This can be addressed by moving the instance in private subnet and have the load balancer configured in public subnets with target groups configured for the web server instance in the private subnet.
+
+Doing these changes will improve the security posture of the webserver instance, as it will only be accessible through the load balancer. You can then take advantage of the security features offered by the load balancer such as WAF and AWS Shield.
+
+2. Both S3 buckets are currently accessible over the public internet.
+
+To further secure the S3 buckets from would be attackers I recommend the following configurations:
+- VPC gateway endpoint is configured for S3. 
+- S3 bucket is configured with a bucket policy that only allows traffic via the VPC gateway endpoint.
+- Only the route tables in the private subnets are configured with the route table entries needed to reach the S3 bucket through the VPC gateway endpoint.
+- The web server instance is configured in the private subnet as per the recommendation in the first answer.
+
+Making these changes will ensure, that even if an attacker was able to gain access to an EC2 instance in a public subnet, it will not be able to access the recipes in the S3 buckets since the EC2 instance needs to be in a private subnet for this to work. The only instance that can access the S3 bucket is the web server instance configured in a private subnet of which only the ALB can reach it.
